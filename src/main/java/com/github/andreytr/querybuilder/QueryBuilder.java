@@ -10,16 +10,25 @@ import java.util.Map;
  * Date: 20.02.2011
  * Time: 21:25:05
  *
- *
- * SELECT
- * FROM
+ * QueryBuilder for JPA. Allow use statements:
+ * <ul>
+ *  <li>SELECT
+ *  <li>FROM
+ *  <li>WHERE
+ *  <li>ORDER BY
+ *  <li>GROUP BY
+ *  <li>HAVING
+ * </ul>
  */
-public class QueryBuilder {
+public class QueryBuilder implements Cloneable {
 
     private String paramPreffix = "param";
 
     private String select = "e";
     private String from;
+    private String orderBy;
+    private String groupBy;
+    private String having;
     private List<String> andWheres = new ArrayList<String>();
     private List<String> orWheres = new ArrayList<String>();
     private Map<String, Object> paramsMap = new HashMap<String, Object>();
@@ -44,6 +53,15 @@ public class QueryBuilder {
             }
             result.append(concatWith(orWheres, "OR"));
         }
+        if (orderBy != null) {
+            result.append(" ORDER BY ").append(orderBy);
+        }
+        if (groupBy != null) {
+            result.append(" GROUP BY ").append(groupBy);
+        }
+        if (having != null) {
+            result.append(" HAVING ").append(having);
+        }
         return result.toString();
     }
 
@@ -53,7 +71,7 @@ public class QueryBuilder {
 
     public QueryBuilder select(String select) {
         this.select = select;
-        return this;
+        return getClone();
     }
 
     public QueryBuilder andWhere(String where, Object... params) {
@@ -61,12 +79,12 @@ public class QueryBuilder {
         int nextParamNumber = getNextParamNumber();
         andWheres.add(insertNamedParamInStatement(where, nextParamNumber));
         addParams(nextParamNumber, params);
-        return this;
+        return getClone();
     }
 
     public QueryBuilder andWhereIfNotNull(String where, Object param) {
         if (param == null) {
-            return this;
+            return getClone();
         }
         return andWhere(where, param);
     }
@@ -76,14 +94,29 @@ public class QueryBuilder {
         int nextParamNumber = getNextParamNumber();
         orWheres.add(insertNamedParamInStatement(where, nextParamNumber));
         addParams(nextParamNumber, params);
-        return this;
+        return getClone();
     }
 
     public QueryBuilder orWhereIfNotNull(String where, Object param) {
         if (param == null) {
-            return this;
+            return getClone();
         }
         return orWhere(where, param);
+    }
+
+    public QueryBuilder orderBy(String orderBy) {
+        this.orderBy = orderBy;
+        return getClone();
+    }
+
+    public QueryBuilder groupBy(String groupBy) {
+        this.groupBy = groupBy;
+        return getClone();
+    }
+
+    public QueryBuilder having(String having) {
+        this.having = having;
+        return getClone();
     }
 
     private void checkParamCount(String statement, Object... params) {
@@ -129,6 +162,14 @@ public class QueryBuilder {
         for(Object param:params) {
             paramsMap.put(paramPreffix + startSuffix, param);
             startSuffix++;
+        }
+    }
+
+    private QueryBuilder getClone() {
+        try {
+            return (QueryBuilder)clone();
+        } catch (CloneNotSupportedException e) {
+            return null;
         }
     }
 }

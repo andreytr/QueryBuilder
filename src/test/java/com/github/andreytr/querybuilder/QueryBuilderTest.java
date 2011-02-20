@@ -1,9 +1,10 @@
 package com.github.andreytr.querybuilder;
 
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.sql.Date;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -150,15 +151,63 @@ public class QueryBuilderTest {
         assertEquals(params.get("param1"), "value");
     }
 
+    public void orderBy() {
+        builder.orderBy("e.field ASC");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e ORDER BY e.field ASC");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void groupBy() {
+        builder.groupBy("e.field");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e GROUP BY e.field");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void having() {
+        builder.having("e.field DESC");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e HAVING e.field DESC");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void sampleQuery() {
+        String productName = "sample";
+        String userName    = null;
+        builder = new QueryBuilder("Order o")
+                  .andWhere("o.name in ?", Arrays.asList("sample1", "sample2"))
+                  .andWhere("o.date > ? OR o.date < ?", 12, 5)
+                  .andWhereIfNotNull("o.product = ?", productName)
+                  .andWhereIfNotNull("o.user = ?", userName);
+
+        String selectQuery = builder.select("o.id, o.name, o.user, o.product")
+                                    .orderBy("o.name")
+                                    .getQuery();
+
+        String countQuery  = builder.select("COUNT(o)")
+                                    .getQuery();
+
+        Map<String, Object> params = builder.getParamsMap();
 
 
+        assertEquals(selectQuery, "SELECT o.id, o.name, o.user, o.product " +
+                                  "FROM Order o " +
+                                  "WHERE (o.name in :param1) AND " +
+                                        "(o.date > :param2 OR o.date < :param3) AND " +
+                                        "(o.product = :param4) " +
+                                  "ORDER BY o.name");
+        assertEquals(countQuery,  "SELECT COUNT(o) " +
+                                  "FROM Order o " +
+                                  "WHERE (o.name in :param1) AND " +
+                                        "(o.date > :param2 OR o.date < :param3) AND " +
+                                        "(o.product = :param4)");
+        assertNotNull(params);
+        assertEquals(params.size(), 4);
+        assertEquals(params.get("param1"), Arrays.asList("sample1", "sample2"));
+        assertEquals(params.get("param2"), 12);
+        assertEquals(params.get("param3"), 5);
+        assertEquals(params.get("param4"), "sample");
 
-
-    
-
-
-
-
-
-
+    }
 }
