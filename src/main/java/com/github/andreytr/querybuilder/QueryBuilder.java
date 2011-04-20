@@ -21,10 +21,11 @@ import java.util.Map;
  * </ul>
  */
 public class QueryBuilder implements Cloneable {
+    private static final String DEFAULT_ALIAS = "e";
 
     private String paramPreffix = "param";
 
-    private String select = "e";
+    private String select = DEFAULT_ALIAS;
     private String from;
     private String orderBy;
     private String groupBy;
@@ -35,6 +36,15 @@ public class QueryBuilder implements Cloneable {
 
     public QueryBuilder(String from) {
         this.from = from;
+    }
+
+    public QueryBuilder(Class clazz, String alias) {
+        this(clazz.getSimpleName() + " " + alias);
+        select = alias;
+    }
+
+    public QueryBuilder(Class clazz) {
+        this(clazz, DEFAULT_ALIAS);
     }
 
     public String getQuery() {

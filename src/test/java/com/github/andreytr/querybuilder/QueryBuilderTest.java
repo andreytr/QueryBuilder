@@ -31,6 +31,16 @@ public class QueryBuilderTest {
         assertEquals(new HashMap(), builder.getParamsMap());
     }
 
+    public void emptySelectByClass() {
+        builder = new QueryBuilder(Object.class);
+        assertEquals(builder.getQuery(), "SELECT e FROM Object e");
+        assertEquals(new HashMap(), builder.getParamsMap());
+
+        builder = new QueryBuilder(Object.class, "o");
+        assertEquals(builder.getQuery(), "SELECT o FROM Object o");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
     public void select() {
         builder.select("e.field1, e.field2");
 
