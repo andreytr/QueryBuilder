@@ -63,14 +63,14 @@ public class QueryBuilder implements Cloneable {
             }
             result.append(concatWith(orWheres, "OR"));
         }
-        if (orderBy != null) {
-            result.append(" ORDER BY ").append(orderBy);
-        }
         if (groupBy != null) {
             result.append(" GROUP BY ").append(groupBy);
         }
         if (having != null) {
             result.append(" HAVING ").append(having);
+        }
+        if (orderBy != null) {
+            result.append(" ORDER BY ").append(orderBy);
         }
         return result.toString();
     }
@@ -149,8 +149,7 @@ public class QueryBuilder implements Cloneable {
     }
 
     private String insertNamedParamInStatement(String statement, int startSuffix) {
-        int i;
-        while((i = statement.indexOf('?')) > -1) {
+        while(statement.indexOf('?') > -1) {
             statement = statement.replaceFirst("\\?", ":" + paramPreffix + startSuffix);
             startSuffix++;
         }
