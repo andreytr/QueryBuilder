@@ -175,11 +175,28 @@ public class QueryBuilderTest {
     }
 
     public void having() {
-        builder.having("e.field DESC");
+        builder.andWhere("e.field.name = ?", "sample");
+        builder.having("e.field.value > ? AND e.field.value < ?", 10, 50);
 
-        assertEquals(builder.getQuery(), "SELECT e FROM Entity e HAVING e.field DESC");
-        assertEquals(new HashMap(), builder.getParamsMap());
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e " +
+                                         "WHERE (e.field.name = :param1) " +
+                                         "HAVING e.field.value > :param2 AND " +
+                                                "e.field.value < :param3");
+        Map<String, Object> params = builder.getParamsMap();
+        assertNotNull(params);
+        assertEquals(params.size(), 3);
+        assertEquals(params.get("param1"), "sample");
+        assertEquals(params.get("param2"), 10);
+        assertEquals(params.get("param3"), 50);
     }
+
+    @Test(
+        expectedExceptions = IllegalArgumentException.class
+    )
+    public void havingParamCountMore() {
+        builder.having("e.price > ?", 10, 20);
+    }
+
 
     public void join() {
         builder.join("e.field as f");

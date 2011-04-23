@@ -169,8 +169,11 @@ public class QueryBuilder implements Cloneable {
         return getClone();
     }
 
-    public QueryBuilder having(String having) {
-        this.having = having;
+    public QueryBuilder having(String having, Object...params) {
+        checkParamCount(having, params);
+        int nextParamNumber = getNextParamNumber();
+        this.having = insertNamedParamInStatement(having, nextParamNumber);
+        addParams(nextParamNumber, params);
         return getClone();
     }
 
