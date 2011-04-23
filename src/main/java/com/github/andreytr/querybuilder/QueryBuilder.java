@@ -14,10 +14,11 @@ import java.util.Map;
  * <ul>
  *  <li>SELECT
  *  <li>FROM
+ *  <li>JOIN/INNER JOIN/LEFT JOIN/LEFT OUTER JOIN [FETCH]
  *  <li>WHERE
- *  <li>ORDER BY
  *  <li>GROUP BY
  *  <li>HAVING
+ *  <li>ORDER BY
  * </ul>
  */
 public class QueryBuilder implements Cloneable {
@@ -30,6 +31,7 @@ public class QueryBuilder implements Cloneable {
     private String orderBy;
     private String groupBy;
     private String having;
+    private List<String> joinLst = new ArrayList<String>();
     private List<String> andWheres = new ArrayList<String>();
     private List<String> orWheres = new ArrayList<String>();
     private Map<String, Object> paramsMap = new HashMap<String, Object>();
@@ -51,6 +53,9 @@ public class QueryBuilder implements Cloneable {
         StringBuilder result = new StringBuilder()
                                .append("SELECT ").append(select)
                                .append(" FROM ").append(from);
+        for(String joinStatement: joinLst) {
+            result.append(" ").append(joinStatement);
+        }
         if (andWheres.size() > 0 || orWheres.size() > 0) {
             result.append(" WHERE ");
         }
@@ -81,6 +86,46 @@ public class QueryBuilder implements Cloneable {
 
     public QueryBuilder select(String select) {
         this.select = select;
+        return getClone();
+    }
+
+    public QueryBuilder join(String joinStatement) {
+        joinLst.add("JOIN " + joinStatement);
+        return getClone();
+    }
+
+    public QueryBuilder joinFetch(String joinStatement) {
+        joinLst.add("JOIN FETCH " + joinStatement);
+        return getClone();
+    }
+
+    public QueryBuilder innerJoin(String joinStatement) {
+        joinLst.add("INNER JOIN " + joinStatement);
+        return getClone();
+    }
+
+    public QueryBuilder innerJoinFetch(String joinStatement) {
+        joinLst.add("INNER JOIN FETCH " + joinStatement);
+        return getClone();
+    }
+
+    public QueryBuilder leftJoin(String joinStatement) {
+        joinLst.add("LEFT JOIN " + joinStatement);
+        return getClone();
+    }
+
+    public QueryBuilder leftJoinFetch(String joinStatement) {
+        joinLst.add("LEFT JOIN FETCH " + joinStatement);
+        return getClone();
+    }
+
+    public QueryBuilder leftOuterJoin(String joinStatement) {
+        joinLst.add("LEFT OUTER JOIN " + joinStatement);
+        return getClone();
+    }
+
+    public QueryBuilder leftOuterJoinFetch(String joinStatement) {
+        joinLst.add("LEFT OUTER JOIN FETCH " + joinStatement);
         return getClone();
     }
 

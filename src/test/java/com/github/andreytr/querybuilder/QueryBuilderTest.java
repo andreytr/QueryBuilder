@@ -3,7 +3,6 @@ package com.github.andreytr.querybuilder;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.sql.Date;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -182,6 +181,62 @@ public class QueryBuilderTest {
         assertEquals(new HashMap(), builder.getParamsMap());
     }
 
+    public void join() {
+        builder.join("e.field as f");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e JOIN e.field as f");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void joinFetch() {
+        builder.joinFetch("e.field");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e JOIN FETCH e.field");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void innerJoin() {
+        builder.innerJoin("e.field as f");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e INNER JOIN e.field as f");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void innerJoinFetch() {
+        builder.innerJoinFetch("e.field");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e INNER JOIN FETCH e.field");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void leftJoin() {
+        builder.leftJoin("e.field as f");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e LEFT JOIN e.field as f");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void leftJoinFetch() {
+        builder.leftJoinFetch("e.field");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e LEFT JOIN FETCH e.field");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void leftOuterJoin() {
+        builder.leftOuterJoin("e.field as f");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e LEFT OUTER JOIN e.field as f");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
+    public void leftOuterJoinFetch() {
+        builder.leftOuterJoinFetch("e.field");
+
+        assertEquals(builder.getQuery(), "SELECT e FROM Entity e LEFT OUTER JOIN FETCH e.field");
+        assertEquals(new HashMap(), builder.getParamsMap());
+    }
+
     public void sampleQuery() {
         String productName = "sample";
         String userName    = null;
@@ -219,5 +274,54 @@ public class QueryBuilderTest {
         assertEquals(params.get("param3"), 5);
         assertEquals(params.get("param4"), "sample");
 
+    }
+
+    public void allStatements() {
+        builder = new QueryBuilder("Order o")
+                  .select("o.id, SUM(o.price)")
+                  .join("o.items as oi")
+                  .joinFetch("o.fetchItems")
+                  .innerJoin("o.innerItems as oi")
+                  .innerJoinFetch("o.innerFetchItems")
+                  .leftJoin("o.leftItems as oi")
+                  .leftJoinFetch("o.leftFetchItems")
+                  .leftOuterJoin("o.leftOuterItems as oi")
+                  .leftOuterJoinFetch("o.leftOuterFetchItems")
+                  .andWhere("o.name in ?", "sample1")
+                  .andWhereIfNotNull("o.product = ?", "productName")
+                  .orWhere("o.field = ?", "value1")
+                  .orWhereIfNotNull("o.field2 = ?", "value2")
+                  .groupBy("o.user")
+                  .having("SUM(o.price) > 0")
+                  .orderBy("o.user.name ASC");
+
+
+
+        String query = builder.getQuery();
+        assertEquals(query, "SELECT o.id, SUM(o.price) " +
+                            "FROM Order o " +
+                            "JOIN o.items as oi " +
+                            "JOIN FETCH o.fetchItems " +
+                            "INNER JOIN o.innerItems as oi " +
+                            "INNER JOIN FETCH o.innerFetchItems " +
+                            "LEFT JOIN o.leftItems as oi " +
+                            "LEFT JOIN FETCH o.leftFetchItems " +
+                            "LEFT OUTER JOIN o.leftOuterItems as oi " +
+                            "LEFT OUTER JOIN FETCH o.leftOuterFetchItems " +
+                            "WHERE (o.name in :param1) AND " +
+                                  "(o.product = :param2) OR " +
+                                  "(o.field = :param3) OR " +
+                                  "(o.field2 = :param4) " +
+                            "GROUP BY o.user " +
+                            "HAVING SUM(o.price) > 0 " +
+                            "ORDER BY o.user.name ASC");
+
+        Map<String, Object> params = builder.getParamsMap();
+        assertNotNull(params);
+        assertEquals(params.size(), 4);
+        assertEquals(params.get("param1"), "sample1");
+        assertEquals(params.get("param2"), "productName");
+        assertEquals(params.get("param3"), "value1");
+        assertEquals(params.get("param4"), "value2");
     }
 }
